@@ -1,4 +1,4 @@
 document.getElementById("btn").addEventListener("click", function () {
-    document.getElementById("msg").textContent =
-        "Phien ban 1.0 - deploy luc: " + new Date().toLocaleString();
+    document.getElementById("msg").textContent = 
+        "Phiên bản 2.0 - deploy lúc: " + new Date().toLocaleString();
 });
