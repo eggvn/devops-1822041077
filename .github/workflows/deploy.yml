@@ -12,45 +12,47 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  # Job 1: Kiểm tra mã nguồn (CI)
+  # Job 1: Kiểm tra tính hợp lệ của code
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Kiểm tra sự tồn tại của 3 file cơ bản
+      - name: Kiểm tra đủ 3 file (index.html, style.css, script.js)
         run: |
-          echo "=== KIỂM TRA FILE BẮT BUỘC ==="
-          test -f index.html || (echo "LỖI: Thiếu file index.html" && exit 1)
-          test -f style.css || (echo "LỖI: Thiếu file style.css" && exit 1)
-          test -f script.js || (echo "LỖI: Thiếu file script.js" && exit 1)
-          echo "--> Đã đủ 3 file: index.html, style.css, script.js"
+          if [ ! -f index.html ]; then echo "Thiếu file index.html"; exit 1; fi
+          if [ ! -f style.css ]; then echo "Thiếu file style.css"; exit 1; fi
+          if [ ! -f script.js ]; then echo "Thiếu file script.js"; exit 1; fi
+          echo "Đã xác nhận đủ 3 file thành công!"
 
-      - name: Kiểm tra thẻ <title> trong index.html
+      - name: Kiểm tra index.html có thẻ <title>
         run: |
-          echo "=== KIỂM TRA THẺ TITLE ==="
-          grep -i "<title>" index.html || (echo "LỖI: index.html thiếu thẻ <title>" && exit 1)
-          echo "--> Đã xác nhận thẻ <title> hợp lệ."
+          if grep -i "<title>" index.html > /dev/null; then
+            echo "Tìm thấy thẻ <title> hợp lệ."
+          else
+            echo "LỖI: Không tìm thấy thẻ <title> trong index.html!"
+            exit 1
+          fi
 
-  # Job 2: Triển khai website tự động (CD)
+  # Job 2: Triển khai lên GitHub Pages (chỉ chạy khi Job check thành công)
   deploy:
+    needs: check
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: check # Chỉ chạy khi job check thành công
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Artifacts
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
